@@ -3,30 +3,29 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 
-# ----------------- BASIC PAGE CONFIG -----------------
+# page setup
 st.set_page_config(
     page_title="🏠Home-Herding in Indian Equity Markets",
     page_icon="🏠",
     layout="wide"
 )
 
-# ------------- GLOBAL STYLING (TEXT SIZE + CENTER) -------------
+# custom styling - spent way too much time on this
 st.markdown(
     """
     <style>
-    /* Keep content width reasonable */
     .main > div {
         max-width: 1100px;
         margin-left: auto;
         margin-right: auto;
     }
-    /* Make paragraphs and list items a bit larger */
+    
     .markdown-text-container p,
     .markdown-text-container li {
         font-size: 1.06rem;
         line-height: 1.6;
     }
-    /* Slightly bolder section headings */
+    
     h2, h3 {
         font-weight: 700;
     }
@@ -38,27 +37,24 @@ st.markdown(
 st.title("📈 Herding Behaviour in Indian equity markets")
 st.caption("🧮 Non-linear CSAD model across market regimes (1996–2024)")
 
-# =====================================================
-# 1. LOAD REGIME SUMMARY
-# =====================================================
-
+# load and prep the regime data
 @st.cache_data
 def load_regime_summary(path: str):
     df = pd.read_csv(path)
 
-    # expected: regime_label, gamma2_Rm_sq, n_obs, mean_CSAD
+    # fixing column name if needed
     if "gamma2_Rm_sq" not in df.columns and "gamma2" in df.columns:
         df.rename(columns={"gamma2": "gamma2_Rm_sq"}, inplace=True)
 
-    # herding strength index: only negative gamma2 counts as herding
+    # herding strength calculation - only counts when gamma2 is negative
     df["herding_strength"] = np.where(df["gamma2_Rm_sq"] < 0,
                                       -df["gamma2_Rm_sq"],
                                       0.0)
 
-    # mark baseline regime explicitly (assumes label contains "1996-1999")
+    # baseline is our reference point
     df["is_baseline"] = df["regime_label"].astype(str).str.contains("1996-1999")
 
-    # qualitative tag for dashboard
+    # adding readable labels for each regime
     labels = []
     for _, row in df.iterrows():
         g2 = row["gamma2_Rm_sq"]
@@ -72,7 +68,6 @@ def load_regime_summary(path: str):
             labels.append("🧊 no herding")
     df["herding_label"] = labels
 
-    # baseline strength = 0 by design
     df.loc[df["is_baseline"], "herding_strength"] = 0.0
 
     return df
@@ -82,10 +77,8 @@ summary_path = "data/csad_regression_summary_all_regimes.csv"
 summary_df = load_regime_summary(summary_path)
 summary_df = summary_df.sort_values("regime_label")
 
-# =====================================================
-# 2. HIGH LEVEL STATS
-# =====================================================
 
+# quick stats section
 st.subheader("🔍 Quick Project Snapshot")
 
 col1, col2, col3, col4 = st.columns(4)
@@ -117,114 +110,106 @@ with col4:
 
 st.markdown("---")
 
-# =====================================================
-# 3. Q&A – WHAT IS HERDING?
-# =====================================================
 
-st.subheader("1️⃣ 🐑 What is Herding?")
+# explaining herding behavior
+st.subheader("🐑 What is Herding?")
 
 left_col, right_col = st.columns([2, 1])
 
 with left_col:
     st.markdown(
         """
-Herding is basically **stock market group-project behaviour**.
+Herding is basically when investors stop thinking independently and start copying each other.
 
-Instead of thinking for themselves, investors start doing:
+Think of it like this:
 
-- 🐑 *copy–paste trading* – “big FII is buying X? I’ll also buy X.”
-- 😨 *FOMO* – “everyone is in small-caps, I should also jump in.”
-- 🙈 Ignoring own information – your analysis says **sell**, but you buy because
-  “market sab jaanta hai”.
+- 🐑 **Copy-paste trading** – "If the big players are buying X, I should too"
+- 😨 **FOMO kicks in** – "Everyone's jumping into small-caps, can't miss out"
+- 🙈 **Ignoring your own analysis** – Deep down you know it's time to sell, but you buy anyway because "the market knows best"
 
-In a normal market, after news:
+Normally after news breaks:
+- Some traders feel bullish
+- Others think it's bearish
+- Returns spread out across stocks because people actually disagree
 
-- some traders are optimistic.  
-- some are pessimistic.  
-
-so returns are **spread out** – people disagree.
-
-In **herding**:
-
-- everyone piles on the **same side**
-- dispersion across stocks **shrinks**
-- the market behaves like **one crowd**, not many independent minds.
+But when herding happens:
+- Everyone rushes to the same side
+- Stock returns cluster together 
+- The whole market moves like one giant crowd instead of thousands of independent decisions
 """
     )
 
 with right_col:
     st.info(
-        "🔍 intuition:\n\n"
-        "- imagine 100 students choosing electives.\n"
-        "- if everyone chooses independently → mix of subjects.\n"
-        "- if everyone copies toppers → same 2–3 subjects dominate.\n"
-        "that copying behaviour is **herding**."
+        "🔍 Think about it:\n\n"
+        "Imagine 100 students picking college electives.\n\n"
+        "Independent choices → diverse mix of subjects picked.\n\n"
+        "Everyone copying the toppers → same 2-3 subjects dominate.\n\n"
+        "That copying behavior? That's herding."
     )
 
 st.markdown("---")
 
-# =====================================================
-# 4. Q&A – WHAT ARE WE TRYING TO SHOW?
-# =====================================================
 
-st.subheader("2️⃣ 🎯 What do we want to show through this project?")
+# project goals
+st.subheader("🎯 What are we actually trying to show?")
 
 st.markdown(
     """
-This dashboard is trying to answer:
+This dashboard answers three big questions:
 
-1. **Does herding actually exist** in Indian equity markets from 1996–2024?  
-2. **Is herding the same in all regimes**, or does it spike only in crisis / mania?  
-3. **Does herding switch on only when market moves are large?**  
-   (non-linear behaviour – calm days look rational, stress days look like a stampede.)
+1. **Does herding even exist** in Indian markets between 1996 and 2024?
+2. **Is it constant**, or does it spike during crises and mania phases?
+3. **Does herding only show up when markets move aggressively?**  
+   (Meaning calm days = rational, volatile days = stampede)
 
-we:
+How we approached it:
 
-- split the sample into **regimes**  
-  - 🧊 **1996–1999** – baseline reference, thin market, low retail  
-  - 📈 **1999–2007** – boom + pre-GFC build-up  
-  - 💥 **2007–2009** – global financial crisis  
-  - 📱 **2015–2024** – modern era, digital & retail wave  
-  - 😷 **2020–2022** – covid + IPO mania  
-- compute **daily CSAD** for each regime  
-- estimate the **non-linear CSAD regression** and compare γ₂ across regimes
+- Split 28 years into distinct **market regimes**:
+  - 🧊 **1996–1999** – Our baseline (thinner market, less retail participation)
+  - 📈 **1999–2007** – Boom years leading up to the global crisis
+  - 💥 **2007–2009** – The financial crisis period
+  - 📱 **2015–2024** – Modern era with digital trading & retail boom
+  - 😷 **2020–2022** – COVID crash followed by IPO frenzy
+  
+- Calculated **daily CSAD** for each regime
+- Ran the **non-linear CSAD regression** and compared γ₂ values across periods
 """
 )
 
 st.markdown("---")
 
-# =====================================================
-# 5. Q&A – WHAT IS CSAD? TOY EXAMPLE + LATEX
-# =====================================================
 
-st.subheader("3️⃣ 🧮 What is CSAD and what does it measure?")
+# CSAD explanation
+st.subheader("🧮 What exactly is CSAD?")
 
 st.markdown(
     """
-To detect herding we need a number that answers:
+To detect herding, we need something that measures:
 
-> “on this day, how far were individual stock returns from the market return?”
+> "How far are individual stock returns from the overall market return on any given day?"
 
-that number is **CSAD – cross-sectional absolute deviation**:
+That's where **CSAD (Cross-Sectional Absolute Deviation)** comes in:
 """
 )
 
 st.latex(r"\text{CSAD}_t = \frac{1}{N}\sum_{i=1}^{N} \left| R_{i,t} - R_{m,t} \right|")
-st.caption("N = number of stocks, R_{i,t} = return of stock i, R_{m,t} = market return on day t.")
+st.caption("N = number of stocks, R_{i,t} = return of stock i, R_{m,t} = market return on day t")
 
 st.markdown(
     """
-interpretation:
+What it tells us:
 
-- if investors **disagree a lot**, individual returns are far from the market → CSAD is **high**  
-- if everyone behaves similarly, individual returns hug the market → CSAD **collapses**
+- **High CSAD** → Investors are disagreeing, stocks moving independently from the index
+- **Low CSAD** → Everyone's moving together, returns clustering around market return
 
-**tiny numeric example**
+**Quick example with actual numbers:**
 
-suppose on one day the market index return is +0.5% (0.005) and four stocks move like this:
+Let's say the market return is +0.5% (0.005) and we have 4 stocks:
 """
 )
 
+# example calculation
 toy_df = pd.DataFrame(
     {
         "stock": ["A", "B", "C", "D"],
@@ -257,85 +242,78 @@ with st.container():
 numeric_eq = r"\text{CSAD} = \frac{1}{4}\sum |R_i - R_m| = %.3f" % csad_example
 st.markdown(
     """
-here:
+Here's the math:
 
-- Market return \( R_m = 0.005 \)  
-- average dispersion:
+- Market return = 0.005
+- Average dispersion:
 """
 )
 st.latex(numeric_eq)
 st.markdown(
     """
-If everyone moved almost exactly like the market,  
-\\( |R_i - R_m| \\) would be tiny and CSAD would be close to 0 → **very strong crowding**.
+If all stocks moved almost identically to the market,  
+these deviations would be tiny and CSAD would approach zero → **extreme crowding/herding**.
 """
 )
 
 st.markdown("---")
 
-# =====================================================
-# 6. Q&A – WHY CSAD AND NOT OTHER MEASURES?
-# =====================================================
 
-st.subheader("4️⃣ 📐 Why CSAD and not some other measure?")
+# why CSAD specifically
+st.subheader("📐 Why use CSAD instead of other measures?")
 
 c1, c2 = st.columns(2)
 
 with c1:
     st.markdown(
         """
-**What we could have used (and why it is weak here)**
+**Other options we considered (and why they didn't work):**
 
-- 📉 **Index volatility (σ of nifty)**  
-  only tells how much the index moves, **ignores cross-section**.  
-  high volatility can exist *with or without* herding.
+- 📉 **Index volatility**  
+  Only shows how much the index bounces around. Doesn't tell us anything about whether individual stocks are moving together or independently. High volatility can happen with OR without herding.
 
 - 🔗 **Average correlations**  
-  need big correlation matrices and still do not directly show non-linear convergence.
+  Requires massive correlation matrices and still doesn't directly capture the non-linear convergence we're looking for.
 
 - 📊 **CSSD (cross-sectional standard deviation)**  
-  very sensitive to outliers; a few crazy stocks can distort it.
+  Too sensitive to outliers. One or two crazy stocks can throw off the entire measure.
 
-these measures mix up:
-
-- “market is just volatile”  
-- vs “market is moving like a herd”.
+The problem? These metrics mix up:
+- "The market is just volatile right now"  
+- versus "The market is literally herding"
 """
     )
 
 with c2:
     st.markdown(
         """
-**Why CSAD fits this project**
+**Why CSAD works better for us:**
 
-- works well with **large cross-sections** (nifty + extended universe)  
-- uses **absolute deviations**, less sensitive to extreme outliers  
-- fits neatly into the **chang, cheng & khorana (2000)** non-linear model:
+- Handles **large cross-sections** well (we're looking at Nifty + broader universe)
+- Uses **absolute deviations**, so outliers don't wreck everything
+- Fits perfectly into the **Chang, Cheng & Khorana (2000)** framework:
 """
     )
     st.latex(r"\text{CSAD}_t = \alpha + \gamma_1 |R_{m,t}| + \gamma_2 R_{m,t}^2 + \varepsilon_t")
-    st.latex(r"\gamma_2 < 0 \;\Rightarrow\; \text{non-linear convergence (herding)}")
+    st.latex(r"\gamma_2 < 0 \;\Rightarrow\; \text{herding detected}")
 
 st.markdown(
     """
-CSAD gives us:
-
-- a **daily herding thermometer** (one number per day)  
-- a clear test: if γ₂ is significantly negative, dispersion fails to grow with large |Rₘ| → **herding is present**.
+Bottom line: CSAD gives us:
+- A **daily herding indicator** (one clean number per trading day)
+- A clear statistical test: if γ₂ comes out significantly negative, dispersion isn't growing with large market moves → **herding confirmed**
 """
 )
 
 st.markdown("---")
 
-# =====================================================
-# 7. PLOTLY BAR – HERDING STRENGTH BY REGIME
-# =====================================================
 
-st.subheader("5️⃣ 📊 Which Regimes herd more than the baseline?")
+# visualization of herding by regime
+st.subheader("📊 Which periods showed stronger herding?")
 
 st.write(
-    "Bars show **extra herding intensity relative to the 1996–1999 baseline**, "
-    "using −γ₂ only when γ₂ < 0. We summarise behaviour in each regime."
+    "These bars show **herding intensity relative to our 1996-1999 baseline**. "
+    "We only count negative γ₂ values as evidence of herding."
 )
 
 fig = px.bar(
@@ -350,24 +328,22 @@ fig = px.bar(
         "herding_label": "Herding Category"
     },
     color_discrete_map={
-        "🧊 baseline (no herding)": "#60a5fa",   # blue
-        "🐑 mild herding": "#f97373",            # mild red
-        "🐃 strong herding": "#b91c1c",          # strong red
-        "🧊 no herding": "#6b7280",              # fallback if it exists
+        "🧊 Baseline (no herding)": "#60a5fa",
+        "🐑 Mild herding": "#f97373",
+        "🐃 Strong herding": "#b91c1c",
+        "🧊 no herding": "#6b7280",
     }
 )
-
-
 
 fig.update_traces(
     textposition="outside",
     hovertemplate="<b>%{x}</b><br>HSI = %{y:.4f}<br>%{text}<extra></extra>"
 )
 fig.update_layout(
-    title="Regime-wise non-linear herding intensity (csad γ₂ comparison)",
-    xaxis_title="regime",
-    yaxis_title="extra herding intensity vs baseline",
-    legend_title="behaviour tag 🐃 / 🐑 / 🧊",
+    title="Herding intensity across different market regimes",
+    xaxis_title="Market regime",
+    yaxis_title="Herding strength vs baseline",
+    legend_title="Behavior type",
     bargap=0.25,
 )
 
@@ -375,20 +351,19 @@ st.plotly_chart(fig, use_container_width=True)
 
 st.markdown(
     """
-- 🧊 **Baseline (no herding)** → reference period 1996–1999  
-- 🐃 **Strong herding** → crisis / mania regimes (e.g. GFC, covid)  
-- 🐑 **Mild herding** → some convergence but still differentiated  
-- 🧊 **No herding** → market behaves like independent investors.
+Legend breakdown:
+- 🧊 **Baseline** → Reference period (1996-1999), no herding detected
+- 🐃 **Strong herding** → Crisis/mania periods like GFC and COVID
+- 🐑 **Mild herding** → Some convergence but stocks still maintain individuality
+- 🧊 **No herding** → Market behaving rationally with independent decision-making
 """
 )
 
 st.markdown("---")
 
-# =====================================================
-# 8. SUMMARY TABLE WITH EMOJIS + CONDITIONAL COLORS
-# =====================================================
 
-st.subheader("6️⃣ 📋 Regime-wise CSAD regression snapshot")
+# detailed table
+st.subheader("📋 Detailed regression results by regime")
 
 table_cols = ["regime_label", "n_obs", "mean_CSAD", "gamma2_Rm_sq", "herding_strength", "herding_label"]
 table_df = summary_df[table_cols].copy()
@@ -396,33 +371,32 @@ table_df["mean_CSAD"] = table_df["mean_CSAD"].round(4)
 table_df["gamma2_Rm_sq"] = table_df["gamma2_Rm_sq"].round(4)
 table_df["herding_strength"] = table_df["herding_strength"].round(4)
 
-# prettier column names
 table_df = table_df.rename(
     columns={
         "regime_label": "regime",
         "n_obs": "trading days",
-        "mean_CSAD": "Mean csad",
-        "gamma2_Rm_sq": "γ₂ (Rm²)",
-        "herding_strength": "herding strength (vs baseline)",
-        "herding_label": "behaviour tag"
+        "mean_CSAD": "Mean CSAD",
+        "gamma2_Rm_sq": "γ₂ coefficient",
+        "herding_strength": "herding strength",
+        "herding_label": "behavior"
     }
 )
 
 def style_row(row):
-    tag = row["behaviour tag"]
-    if "baseline" in tag:
-        color = "rgba(148, 163, 184, 0.18)"  # neutral
+    tag = row["behavior"]
+    if "baseline" in tag.lower():
+        color = "rgba(148, 163, 184, 0.18)"
     elif tag.startswith("🐃"):
-        color = "rgba(220, 38, 38, 0.18)"    # red-ish
+        color = "rgba(220, 38, 38, 0.18)"
     elif tag.startswith("🐑"):
-        color = "rgba(234, 179, 8, 0.18)"    # amber
+        color = "rgba(234, 179, 8, 0.18)"
     else:
-        color = "rgba(37, 99, 235, 0.18)"    # blue
+        color = "rgba(37, 99, 235, 0.18)"
     return [f"background-color: {color}"] * len(row)
 
 styled = table_df.style.apply(style_row, axis=1)
 
-with st.expander("📊  Detailed regime summary table", expanded=False):
+with st.expander("📊 Full regime summary (click to expand)", expanded=False):
     st.markdown(
         """
         <div style="
@@ -437,34 +411,23 @@ with st.expander("📊  Detailed regime summary table", expanded=False):
     st.dataframe(styled, use_container_width=True, height=260)
     st.markdown("</div>", unsafe_allow_html=True)
 
+st.markdown("---")
 
-st.markdown("---", unsafe_allow_html=True)
 
-# Custom CSS targeting Streamlit buttons EXACTLY
-st.markdown("---", unsafe_allow_html=True)
-
-# Custom CSS targeting Streamlit buttons EXACTLY
-st.markdown("---", unsafe_allow_html=True)
-
-# Custom CSS targeting Streamlit buttons EXACTLY
+# navigation button styling
 st.markdown("""
 <style>
 div.stButton > button:first-child {
     background-color: #22c55e !important;
     color: white !important;
-
     padding: 22px 65px !important;
-    border-radius: 22px !important;     /* << Rounded rectangle */
-    
+    border-radius: 22px !important;
     font-size: 26px !important;
     font-weight: 800 !important;
-
     border: none !important;
     box-shadow: 0px 6px 16px rgba(0,0,0,0.40) !important;
-
     min-width: 420px !important;
     height: 78px !important;
-
     display: inline-block;
 }
 
@@ -483,7 +446,6 @@ div.stButton > button:hover {
 </style>
 """, unsafe_allow_html=True)
 
-# Centered button + switch_page routing
 st.markdown("<div class='centered-btn'>", unsafe_allow_html=True)
 if st.button("📊 Next: Data & Methodology", key="go_data"):
     st.switch_page("pages/1_📊_Data_and_methodology.py")

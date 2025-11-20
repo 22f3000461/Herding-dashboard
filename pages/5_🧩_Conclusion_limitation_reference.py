@@ -16,7 +16,7 @@ st.markdown(
     .markdown-text-container li { font-size:1.06rem; line-height:1.6; }
     h2, h3 { font-weight:700; }
 
-    /* big centered finish button */
+    /* fancy finish button */
     .big-finish-btn button {
         display:inline-block;
         background-color:#4CAF50;
@@ -40,11 +40,12 @@ st.markdown(
 )
 
 st.title("🧩 Conclusion, Suggestions, Limitations and References")
-st.caption("Tying together the evidence from all Regimes")
+st.caption("wrapping up what we learned from watching markets lose their minds")
 
 @st.cache_data
 def load_regime_summary(path: str):
     df = pd.read_csv(path)
+    # fixing column names because someone kept changing them
     if "gamma2_Rm_sq" not in df.columns and "gamma2" in df.columns:
         df.rename(columns={"gamma2": "gamma2_Rm_sq"}, inplace=True)
     df["herding_strength"] = np.where(df["gamma2_Rm_sq"] < 0, -df["gamma2_Rm_sq"], 0.0)
@@ -53,8 +54,8 @@ def load_regime_summary(path: str):
 
 summary_df = load_regime_summary("data/csad_regression_summary_all_regimes.csv")
 
-# ---------------- 1. KEY FINDINGS ----------------
-st.subheader("1️⃣ Key findings")
+# ---------------- 1. WHAT WE FOUND ----------------
+st.subheader("What the data actually told us")
 
 if not summary_df.empty:
     baseline = summary_df[summary_df["is_baseline"]].iloc[0]
@@ -64,104 +65,121 @@ if not summary_df.empty:
 
     st.markdown(
         f"""
-- baseline regime **1996–1999** behaves as a **reference, low-herding market**.  
-- **{strongest['regime_label']}** shows the **strongest non-linear herding** (most negative γ₂).  
-- **{weakest['regime_label']}** is the **most independent non-baseline regime**.  
-- covid window and gfc period both show **episodic crowd behaviour** – dispersion collapses in large moves.
+- **1996–1999** is our chill baseline – markets doing their normal thing, low herding  
+- **{strongest['regime_label']}** had people moving in lockstep the most (crazy negative γ₂)  
+- **{weakest['regime_label']}** was where traders actually thought for themselves  
+- both the GFC meltdown and covid circus showed clear signs of everyone running to the same exit
 """
     )
 
 st.markdown("---")
 
-# ---------------- 2. SUGGESTIONS ----------------
-st.subheader("2️⃣ Suggestions / Implications")
+# ---------------- 2. WHO CARES AND WHY ----------------
+st.subheader("Why this matters (and what to do about it)")
 
 st.markdown(
     """
-**for regulators and exchanges**
+**if you're a regulator or run an exchange:**
 
-- monitor **cross-sectional dispersion** along with volatility indices to detect crowding in real time.  
-- during herding spikes, tighten **intraday risk controls** (margins, position limits, volatility filters).  
+- watching just volatility isn't enough – track cross-sectional dispersion too  
+- when CSAD tanks while everyone's trading, that's your red flag for a pile-on  
+- maybe tighten margin requirements or circuit breakers when herding spikes  
 
-**for portfolio managers**
+**if you manage portfolios:**
 
-- treat **herding regimes** as distinct states: correlation structures and diversification benefits change.  
-- stress testing should include scenarios where **dispersion collapses**, not only volatility spikes.  
+- herding regimes break your usual diversification assumptions  
+- when everyone crowds into the same trades, correlations go to 1 and your fancy risk models lie to you  
+- stress tests need scenarios where dispersion collapses, not just vol explosions  
 
-**for retail investors**
+**if you're trading your own money:**
 
-- extremely unanimous narratives (everyone bullish / everyone bearish) often coincide with **low csad** →  
-  these periods are **riskier than they look**.
+- when literally everyone agrees on a narrative (stocks only go up, or it's all going to zero), be scared  
+- unanimous sentiment = low CSAD = you're probably late to the party  
+- these periods look safe because "everyone's doing it" but they're actually sketchy as hell
 """
 )
 
 st.markdown("---")
 
-# ---------------- 3. LIMITATIONS ----------------
-st.subheader("3️⃣ Limitations of the study")
+# ---------------- 3. WHERE THIS FALLS SHORT ----------------
+st.subheader("Stuff we didn't capture (because nothing's perfect)")
 
 st.markdown(
     """
-- uses **daily data** only – intraday herding is not captured.  
-- csad focuses on **return convergence**; it does not separately model information vs sentiment shocks.  
-- regime borders are **exogenously chosen** (based on macro events) rather than statistically estimated.  
-- survivorship bias and changes in index composition may still matter, even after cleaning.
+- we only looked at **daily closing prices** – all the intraday panic is invisible here  
+- CSAD tells you when returns bunch up, but it can't tell you if that's rational info or pure panic  
+- regime breaks are hand-picked based on what history books say, not what the data naturally clusters into  
+- survivorship bias is still lurking somewhere – companies that died off aren't in this analysis  
+- index composition changed over time, so we're not quite comparing apples to apples across decades
 """
 )
 
 st.markdown("---")
 
-# ---------------- 4. EXTENSIONS ----------------
-st.subheader("4️⃣ Possible Extensions")
+# ---------------- 4. WHERE TO GO NEXT ----------------
+st.subheader("Ideas for taking this further")
 
 st.markdown(
     """
-- run **rolling csad regressions** to estimate a time-varying γ₂.  
-- compare herding across **sectoral indices** (it, banks, small-caps vs large-caps).  
-- combine csad with **order-flow or volume-based** herding measures.  
-- compare Indian market herding with **other emerging markets** using the same framework.
+- run the CSAD regression in **rolling windows** so you can see γ₂ evolving day by day  
+- break it down by **sector** – tech probably herds way different than banks or pharma  
+- mix in **order flow data** or actual trading volume to see who's doing the herding  
+- compare Indian markets to other emerging markets using the same setup – is this unique or universal?  
+- look at **social media sentiment** during the covid/IPO era to connect wsb chatter to dispersion drops
 """
 )
 
 st.markdown("---")
 
-# ---------------- 5. REFERENCES ----------------
-st.subheader("5️⃣ References (core papers)")
+# ---------------- 5. WHERE I STOLE IDEAS FROM ----------------
+st.subheader("Papers that did the heavy lifting first")
 
 st.markdown(
     """
-- Chang, E. C., Cheng, J. W., & Khorana, A. (2000). **An examination of herd behavior in equity markets.** *Journal of Banking & Finance*.  
-- Christie, W. G., & Huang, R. D. (1995). **Following the pied piper: Do individual returns herd around the market?** *Financial Analysts Journal*.  
-- Bikhchandani, S., Hirshleifer, D., & Welch, I. (1992). **A theory of fads, fashion, custom, and cultural change as informational cascades.** *Journal of Political Economy*.  
-- Relevant SEBI / RBI / NSE documents on market microstructure and volatility controls (for local context).
+- **Chang, Cheng & Khorana (2000)** – the OG paper that made CSAD a thing for measuring herding  
+- **Christie & Huang (1995)** – earlier approach looking at extreme market moves and return dispersion  
+- **Bikhchandani, Hirshleifer & Welch (1992)** – theory behind why people follow the crowd even when it's dumb  
+- various SEBI/RBI/NSE reports on how Indian markets actually work under the hood  
+
+basically I'm standing on the shoulders of people smarter than me who figured this out years ago.
 """
 )
 
 st.markdown(
     """
-this page summarises **what the dashboard has shown** and **where the csad-based analysis can be taken next**.
+so yeah, that's the story the data tells. markets aren't always rational, people follow each other off cliffs sometimes, and you can see it in the numbers if you look right.
 """
 )
 
 st.markdown("---")
 
-# ---------------- 6. FUNKY END BUTTON + EFFECTS ----------------
-st.subheader("6️⃣ 🎉 End of the road (kind of)")
+# ---------------- 6. THE ACTUAL END ----------------
+st.subheader("🎉 Congrats, you made it")
 
 st.markdown(
     """
-you’ve reached the last page of the dashboard.  
-if you still expect a *next* page, hit the button and see what happens 👇
+this is the last page. for real this time.  
+there's no secret level. no bonus content. just this button that doesn't go anywhere ↓
 """
 )
 
 st.markdown("<div class='big-finish-wrapper'>", unsafe_allow_html=True)
 with st.container():
-    # apply custom class to this button only
-    finish_clicked = st.button("🚀 Next page (spoiler: there isn't one)", key="finish_btn", help="click to finish the journey", type="primary")
+    finish_clicked = st.button(
+        "🚀 Click for next page (spoiler: nope)", 
+        key="finish_btn", 
+        help="I literally just told you there isn't one", 
+        type="primary"
+    )
 st.markdown("</div>", unsafe_allow_html=True)
 
 if finish_clicked:
-    st.success("😎 that’s it. you’ve officially reached the end of the herding dashboard. nice grind. ")
+    st.success("🎊 told you so. you've seen everything. now go outside or something.")
     st.balloons()
     st.snow()
+    st.markdown(
+        """
+        ---
+        *thanks for actually reading through this whole thing instead of just skipping to the conclusion like a normal person would*
+        """
+    )

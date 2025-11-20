@@ -2,13 +2,12 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
+
 st.set_page_config(
     page_title="📉 Rolling CSAD – Herding dashboard",
     page_icon="📉",
     layout="wide"
 )
-
-
 
 st.markdown(
     """
@@ -23,8 +22,9 @@ st.markdown(
 )
 
 st.title("📉 Rolling CSAD and Market Stress")
-st.caption("How dispersion behaves over time inside each regime")
+st.caption("watching dispersion dance around inside each market regime")
 
+# yeah I hardcoded the files, sue me
 REGIME_FILES = {
     "🧊1996–1999  Baseline": "data/csad_1996_1999.csv",
     "📈1999–2007  Pre-GFC boom": "data/csad_1999_2007.csv",
@@ -36,87 +36,97 @@ REGIME_FILES = {
 @st.cache_data
 def load_csad(path: str):
     df = pd.read_csv(path)
+    # dayfirst because whoever formatted these dates had their own ideas
     df["date"] = pd.to_datetime(df["date"], dayfirst=True, errors="coerce")
     df = df.dropna(subset=["date"]).sort_values("date")
     return df
 
-st.subheader("1️⃣ Choose Regime and Rolling window")
+st.subheader("Pick your regime and window size")
 
 regime_name = st.selectbox("regime", list(REGIME_FILES.keys()), index=3)
-window = st.slider("rolling window (days)", min_value=20, max_value=250, value=60, step=10)
+window = st.slider(
+    "rolling window (days)", 
+    min_value=20, 
+    max_value=250, 
+    value=60, 
+    step=10
+)
 
 df = load_csad(REGIME_FILES[regime_name])
 
+# bail if the data's busted
 if "CSAD" not in df.columns:
-    st.error("CSAD column not found in this file.")
+    st.error("yo, CSAD column is missing from this file. check your data.")
     st.stop()
 
+# calculate rolling averages
 df = df.set_index("date")
 df["csad_roll"] = df["CSAD"].rolling(window).mean()
+
+# only calc market return rolling avg if it exists
 if "Rm" in df.columns:
     df["Rm_abs_roll"] = df["Rm"].abs().rolling(window).mean()
 else:
     df["Rm_abs_roll"] = np.nan
+
 df = df.reset_index()
 
-st.markdown("### 2️⃣ Rolling Average csad")
+st.markdown("### Rolling average CSAD over time")
 
 fig1 = px.line(
     df,
     x="date",
     y="csad_roll",
-    title=f"rolling {window}-day average CSAD – {regime_name}"
+    title=f"{window}-day rolling CSAD – {regime_name}"
 )
 fig1.update_layout(
     xaxis_title="date",
-    yaxis_title=f"CSAD {window}-day mean",
+    yaxis_title=f"CSAD (rolling {window}d avg)",
 )
 st.plotly_chart(fig1, use_container_width=True)
 
+# only show market return plot if we actually have the data
 if df["Rm_abs_roll"].notna().any():
-    st.markdown("### 3️⃣ rolling average |market return|")
+    st.markdown("### Rolling average absolute market return")
     fig2 = px.line(
         df,
         x="date",
         y="Rm_abs_roll",
-        title=f"rolling {window}-day average |Rₘ| – {regime_name}"
+        title=f"{window}-day rolling |Rₘ| – {regime_name}"
     )
     fig2.update_layout(
         xaxis_title="date",
-        yaxis_title=f"|Rₘ| {window}-day mean",
+        yaxis_title=f"|Rₘ| (rolling {window}d avg)",
     )
     st.plotly_chart(fig2, use_container_width=True)
 
 st.markdown(
     """
-reading these plots:
+what you're looking at:
 
-- **Spikes in rolling csad** → periods where dispersion stays high for many days  
-- **Flat or collapsing csad** while |Rₘ| is high → **persistent herding**  
-this view complements the static γ₂ estimate from the regression.
+- **big spikes in rolling CSAD** → stocks went wild for days on end  
+- **CSAD tanks while |Rₘ| stays high** → everyone's moving together = **herding**  
+
+this gives you the story behind that static γ₂ coefficient from your regression.
 """
 )
+
 st.markdown("---", unsafe_allow_html=True)
 
-# --- UNIVERSAL BUTTON STYLE (rounded rectangle, big, bold) ---
+# big chunky button styling because default streamlit buttons are wimpy
 st.markdown("""
 <style>
 div.stButton > button:first-child {
     background-color: #22c55e !important;
     color: white !important;
-
     padding: 22px 65px !important;
-    border-radius: 22px !important;     /* Rounded rectangle */
-
+    border-radius: 22px !important;
     font-size: 26px !important;
     font-weight: 800 !important;
-
     border: none !important;
     box-shadow: 0px 6px 16px rgba(0,0,0,0.40) !important;
-
     min-width: 420px !important;
     height: 78px !important;
-
     display: inline-block !important;
 }
 

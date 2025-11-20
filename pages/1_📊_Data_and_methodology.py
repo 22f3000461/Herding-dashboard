@@ -4,9 +4,12 @@ import numpy as np
 import plotly.express as px
 
 st.set_page_config(
-    page_title="📊 Data and Methodology – Herding dashboard",page_icon="📊", layout="wide")
+    page_title="📊 Data and Methodology – Herding dashboard",
+    page_icon="📊", 
+    layout="wide"
+)
 
-# ---------- simple styling ----------
+# CSS tweaks - took forever to get the spacing right
 st.markdown(
     """
     <style>
@@ -26,22 +29,26 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.title("📊 Data and Methodology")
-st.caption("How the CSAD herding model is built for indian markets")
+st.title("📊 Data & Methodology")
+st.caption("Breaking down how we analyzed 28 years of Indian market data")
 
-# ---------- load regression summary ----------
+# Load the regime summary data
 @st.cache_data
 def load_regime_summary(path: str):
     df = pd.read_csv(path)
-
+    
+    # sometimes the column name comes out as 'gamma2' instead of 'gamma2_Rm_sq'
     if "gamma2_Rm_sq" not in df.columns and "gamma2" in df.columns:
         df.rename(columns={"gamma2": "gamma2_Rm_sq"}, inplace=True)
 
+    # calculate herding strength - only negative gamma2 matters
     df["herding_strength"] = np.where(df["gamma2_Rm_sq"] < 0,
                                       -df["gamma2_Rm_sq"],
                                       0.0)
+    
     df["is_baseline"] = df["regime_label"].astype(str).str.contains("1996-1999")
 
+    # assign readable tags
     labels = []
     for _, row in df.iterrows():
         g2 = row["gamma2_Rm_sq"]
@@ -54,55 +61,67 @@ def load_regime_summary(path: str):
         else:
             labels.append("🧊 no herding")
     df["herding_label"] = labels
+    
     df.loc[df["is_baseline"], "herding_strength"] = 0.0
+    
     return df
 
 summary_df = load_regime_summary("data/csad_regression_summary_all_regimes.csv")
 summary_df = summary_df.sort_values("regime_label")
 
-# ---------- section: data sources ----------
-st.subheader("1️⃣ Data sources and sample construction")
+
+st.subheader(" Data sources & sample construction")
 
 st.markdown(
     """
-- **universe**: daily equity prices for broad indian stock universe  
-  (large-cap, mid-cap, small-cap; constituents adjusted over time).  
-- **frequency**: daily close-to-close returns.  
-- **period**: 1996–2024, split into economic regimes.  
-- **construction**:
-  - adjust for stock splits / bonuses where needed  
-  - remove days with missing prices on more than a threshold share of stocks  
-  - keep only stocks with sufficient trading history inside each regime.
+We pulled together daily stock prices across the Indian equity universe - everything from blue-chip large-caps 
+down to smaller mid and small-cap names. The exact list of stocks changed over time (companies get listed, 
+delisted, merged... you know how it goes).
+
+**What we worked with:**
+- Daily closing prices from 1996 through 2024
+- Returns calculated as simple day-over-day percentage changes
+- Split the data into distinct market regimes based on economic conditions
+
+**Data cleaning (the tedious part):**
+- Handled corporate actions - stock splits, bonus issues, etc.
+- Filtered out days where too many stocks had missing data (usually around holidays or system glitches)
+- Set minimum thresholds for each stock's trading history within a regime - if a stock barely traded, we excluded it
+
+The goal was to have a clean, consistent dataset for each regime without introducing survivorship bias.
 """
 )
 
-st.markdown("### regime definition used in the study")
+st.markdown("### Market regimes we analyzed")
 
 with st.container():
     tmp = summary_df[["regime_label", "n_obs", "herding_label"]].copy()
     tmp = tmp.rename(
         columns={
-            "regime_label": "regime",
-            "n_obs": "Trading days",
-            "herding_label": "Behaviour tag"
+            "regime_label": "Period",
+            "n_obs": "Days analyzed",
+            "herding_label": "Finding"
         }
     )
     st.dataframe(tmp, use_container_width=True, height=250)
 
 st.markdown("---")
 
-# ---------- section: variables ----------
-st.subheader("2️⃣ variables used in the csad model")
+
+st.subheader(" Key variables")
 
 st.markdown(
     """
-for each day *t* and each stock *i* inside a regime:
+For every single trading day in our sample, we calculated three main things:
 
-- \( R_{i,t} \) – daily return on stock *i*  
-- \( R_{m,t} \) – value-weighted market portfolio return (constructed from the universe)  
-- \( \text{CSAD}_t \) – cross-sectional absolute deviation of individual returns from the market
+**Individual stock return** - \( R_{i,t} \)  
+Pretty straightforward: (Today's close - Yesterday's close) / Yesterday's close for each stock
 
-the csad measure is defined as:
+**Market return** - \( R_{m,t} \)  
+The overall portfolio return, calculated as a value-weighted average across all stocks in the universe that day
+
+**CSAD (Cross-Sectional Absolute Deviation)** - \( \text{CSAD}_t \)  
+This is the key metric. It measures dispersion - basically "how spread out were individual stock returns compared to the market?"
 """
 )
 
@@ -110,24 +129,27 @@ st.latex(r"\text{CSAD}_t = \frac{1}{N_t} \sum_{i=1}^{N_t} \left| R_{i,t} - R_{m,
 
 st.markdown(
     """
-where \( N_t \) is the number of stocks with valid returns on day *t*.
+\( N_t \) = number of stocks with valid data on day *t*
+
+Think of it this way: if the market goes up 1% and every single stock also goes up exactly 1%, then CSAD = 0. 
+Perfect synchronization. But if stocks are all over the place - some up 5%, some down 3%, some flat - then CSAD is high.
+
+When herding happens, CSAD doesn't grow like it should during big market moves. It stays compressed.
 """
 )
 
 st.markdown("---")
 
-# ---------- section: regression specification ----------
-# --------- section: regression specification ---------
-st.subheader("📘 econometric model ｜ non-linear csad regression")
+
+st.subheader("📘 The regression model (non-linear CSAD)")
 
 st.markdown(
     """
-for each regime we run the **chang, cheng & khorana (2000)** style regression:
-
+We're using the **Chang, Cheng & Khorana (2000)** framework here. It's become the standard approach for 
+detecting herding in equity markets. Here's the equation we estimate separately for each regime:
 """
 )
 
-# ---------------- PROPER LATEX EQUATION ----------------
 st.latex(
     r"""
     \text{CSAD}_t \;=\; 
@@ -138,29 +160,43 @@ st.latex(
     """
 )
 
-# ---------------- INTERPRETATION ----------------
 st.markdown(
     """
-### interpretation
+### Breaking it down
 
-- \( \gamma_1 \) captures the **normal, linear** rise in dispersion as markets move  
-- \( \gamma_2 \) captures **non-linear convergence** (the key herding signal):
+**α (alpha)** - Just the intercept, tells us the baseline CSAD level
 
-    - if \( \gamma_2 \ge 0 \) → dispersion rises normally → investors behave independently  
-    - if \( \gamma_2 < 0 \) → dispersion fails to rise or even **falls** in big moves → **herding**  
+**γ₁ (gamma 1)** - Linear term  
+Captures normal market behavior. Usually positive because when markets move a lot (up or down), 
+individual stocks naturally show more dispersion. Different stocks react differently to news.
 
-### estimation details
+**γ₂ (gamma 2)** - Quadratic term ← *This is what we care about*  
+Tests for non-linearity. Under normal conditions, this should be positive or at worst zero.  
+But if γ₂ is significantly **negative**, that's your herding signal.
 
-- estimation method: OLS with **robust (heteroskedasticity-consistent)** standard errors  
-- sample: one regression estimated per regime  
-- inference: the **t-statistic** of \( \gamma_2 \) determines whether herding is statistically meaningful  
+Why? Because negative γ₂ means dispersion actually *decreases* or fails to increase properly when market 
+movements get large. Everyone's piling in the same direction instead of thinking independently.
+
+### Technical details
+
+- Estimation: Standard OLS regression
+- Standard errors: Robust (Newey-West style) to handle heteroskedasticity and potential autocorrelation
+- One regression per regime (so we can see how herding changes across different market conditions)
+- Statistical significance tested via t-stats on γ₂
+
+We're looking for γ₂ < 0 with a significant t-stat. That combination = herding confirmed.
 """
 )
 
 st.markdown("---")
 
-# ---------- section: quick visual – data coverage ----------
-st.subheader("4️⃣ data coverage by regime")
+
+st.subheader("Sample coverage by period")
+
+st.write(
+    "Each regime has a different sample size depending on how long that period lasted. "
+    "More trading days = more robust estimates."
+)
 
 fig = px.bar(
     summary_df,
@@ -168,48 +204,43 @@ fig = px.bar(
     y="n_obs",
     color="herding_label",
     labels={
-        "regime_label": "regime",
-        "n_obs": "trading days",
-        "herding_label": "behaviour tag"
+        "regime_label": "Regime",
+        "n_obs": "Trading days",
+        "herding_label": "Classification"
     },
-    title="trading days per regime and qualitative herding tag",
+    title="Sample size and herding classification by regime",
     color_discrete_map={
-        "🧊 baseline (no herding)": "#60a5fa",   # blue
-        "🐑 mild herding": "#f97373",            # mild red
-        "🐃 strong herding": "#b91c1c",          # strong red
+        "🧊 baseline (no herding)": "#60a5fa",
+        "🐑 mild herding": "#f97373",
+        "🐃 strong herding": "#b91c1c",
         "🧊 no herding": "#6b7280",
     }
 )
 
 fig.update_layout(
-    xaxis_title="regime",
-    yaxis_title="number of daily observations",
-    legend_title="behaviour tag 🐃 / 🐑 / 🧊",
+    xaxis_title="Market regime",
+    yaxis_title="Number of trading days analyzed",
+    legend_title="Behavior type",
     bargap=0.25,
 )
 st.plotly_chart(fig, use_container_width=True)
 
-st.markdown("---", unsafe_allow_html=True)
+st.markdown("---")
 
-# --- UNIVERSAL BUTTON STYLE (rounded rectangle, big, bold) ---
+# Button styling - keeping the green theme consistent
 st.markdown("""
 <style>
 div.stButton > button:first-child {
     background-color: #22c55e !important;
     color: white !important;
-
     padding: 22px 65px !important;
-    border-radius: 22px !important;     /* Rounded rectangle */
-
+    border-radius: 22px !important;
     font-size: 26px !important;
     font-weight: 800 !important;
-
     border: none !important;
     box-shadow: 0px 6px 16px rgba(0,0,0,0.40) !important;
-
     min-width: 420px !important;
     height: 78px !important;
-
     display: inline-block !important;
 }
 
@@ -227,10 +258,8 @@ div.stButton > button:hover {
 }
 </style>
 """, unsafe_allow_html=True)
+
 st.markdown("<div class='centered-btn'>", unsafe_allow_html=True)
-if st.button("📉 Next: Rolling CSAD", key="go_roll"):
+if st.button("📉 Next: Rolling CSAD Analysis", key="go_roll"):
     st.switch_page("pages/2_📉_Rolling_CSAD.py")
 st.markdown("</div>", unsafe_allow_html=True)
-
-
-

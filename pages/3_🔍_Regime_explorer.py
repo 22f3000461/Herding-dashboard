@@ -8,6 +8,7 @@ st.set_page_config(
     page_icon="🔍",
     layout="wide"
 )
+
 st.markdown("""
 <style>
 html, body, [class*="css"], .markdown-text-container {
@@ -16,8 +17,6 @@ html, body, [class*="css"], .markdown-text-container {
 }
 </style>
 """, unsafe_allow_html=True)
-
-
 
 st.markdown(
     """
@@ -32,8 +31,9 @@ st.markdown(
 )
 
 st.title("🔍 Regime Explorer")
-st.caption("Zoom into one regime: prices, market return, and CSAD shape")
+st.caption("drill down into one regime: see prices move, returns spike, and CSAD tell its story")
 
+# same file setup as before
 REGIME_CSAD = {
     "🧊1996–1999  Baseline": "data/csad_1996_1999.csv",
     "📈1999–2007  Pre-GFC boom": "data/csad_1999_2007.csv",
@@ -52,26 +52,27 @@ def load_csad(path: str):
 @st.cache_data
 def load_summary(path: str):
     df = pd.read_csv(path)
+    # handling inconsistent column naming because data cleaning is never done
     if "gamma2_Rm_sq" not in df.columns and "gamma2" in df.columns:
         df.rename(columns={"gamma2": "gamma2_Rm_sq"}, inplace=True)
     return df
 
 summary_df = load_summary("data/csad_regression_summary_all_regimes.csv")
 
-st.subheader("1️⃣ Select Regime")
+st.subheader("Pick your regime")
 
 regime_name = st.selectbox("regime", list(REGIME_CSAD.keys()), index=3)
 csad_df = load_csad(REGIME_CSAD[regime_name])
 
-# reconstruct simple index from Rm if available
+# build a fake index from cumulative returns
 if "Rm" in csad_df.columns:
     csad_df["index_level"] = 100 * (1 + csad_df["Rm"]).cumprod()
 else:
     csad_df["index_level"] = np.nan
 
-# quick stats from regression summary
+# grab key stats from the summary table if we can find this regime
 if summary_df is not None:
-    # try to match by substring
+    # match by first word/emoji since full strings get messy
     match = summary_df[summary_df["regime_label"].astype(str).str.contains(regime_name.split()[0])]
     if not match.empty:
         row = match.iloc[0]
@@ -82,7 +83,7 @@ if summary_df is not None:
 
 st.markdown("---")
 
-st.subheader("2️⃣ Price index and CSAD over time")
+st.subheader(" Price movement and CSAD behavior")
 
 c1, c2 = st.columns(2)
 
@@ -91,9 +92,9 @@ with c1:
         csad_df,
         x="date",
         y="index_level",
-        title=f"reconstructed market index – {regime_name}"
+        title=f"market index (reconstructed) – {regime_name}"
     )
-    fig_price.update_layout(xaxis_title="date", yaxis_title="index (base = 100)")
+    fig_price.update_layout(xaxis_title="date", yaxis_title="index level (base=100)")
     st.plotly_chart(fig_price, use_container_width=True)
 
 with c2:
@@ -101,14 +102,14 @@ with c2:
         csad_df,
         x="date",
         y="CSAD",
-        title=f"csad over time – {regime_name}"
+        title=f"CSAD day-by-day – {regime_name}"
     )
     fig_csad.update_layout(xaxis_title="date", yaxis_title="CSAD")
     st.plotly_chart(fig_csad, use_container_width=True)
 
 st.markdown("---")
 
-st.subheader("3️⃣ CSAD vs |Rₘ| – Curvature check")
+st.subheader("Does CSAD curve down when markets go nuts?")
 
 if "abs_Rm" in csad_df.columns:
     fig_scatter = px.scatter(
@@ -116,9 +117,10 @@ if "abs_Rm" in csad_df.columns:
         x="abs_Rm",
         y="CSAD",
         opacity=0.5,
-        title=f"csad vs |Rₘ| – {regime_name}"
+        title=f"CSAD vs |Rₘ| scatter – {regime_name}"
     )
 
+    # throw a quadratic fit on there to see the bend
     try:
         x = csad_df["abs_Rm"].values
         y = csad_df["CSAD"].values
@@ -132,6 +134,7 @@ if "abs_Rm" in csad_df.columns:
             name="quadratic fit"
         )
     except Exception:
+        # polyfit can fail if data's trash, just skip it
         pass
 
     fig_scatter.update_layout(
@@ -142,37 +145,31 @@ if "abs_Rm" in csad_df.columns:
 
     st.markdown(
         """
-reading this plot:
+how to read this scatter:
 
-- if the fitted curve is **roughly linear or upward** → dispersion increases with |Rₘ| → normal behaviour  
-- if it **bends down** at high |Rₘ| → dispersion collapses in big moves → sign of **herding**
+- **straight line or curves up** → stocks spread out when market moves big → normal behavior  
+- **curves DOWN at high |Rₘ|** → dispersion dies during big moves → **herding alarm**
 """
     )
 else:
-    st.warning("abs_Rm column missing in this csad file; cannot draw curvature plot.")
-st.markdown("---", unsafe_allow_html=True)
+    st.warning("can't find abs_Rm in this file, so no curvature plot for you.")
 
 st.markdown("---", unsafe_allow_html=True)
 
-# --- UNIVERSAL BUTTON STYLE (rounded rectangle, big, bold) ---
+# chunky button time
 st.markdown("""
 <style>
 div.stButton > button:first-child {
     background-color: #22c55e !important;
     color: white !important;
-
     padding: 22px 65px !important;
-    border-radius: 22px !important;     /* Rounded rectangle */
-
+    border-radius: 22px !important;
     font-size: 26px !important;
     font-weight: 800 !important;
-
     border: none !important;
     box-shadow: 0px 6px 16px rgba(0,0,0,0.40) !important;
-
     min-width: 420px !important;
     height: 78px !important;
-
     display: inline-block !important;
 }
 
