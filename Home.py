@@ -5,7 +5,7 @@ import plotly.express as px
 
 # page setup
 st.set_page_config(
-    page_title="🏠Home-Herding in Indian Equity Markets",
+    page_title="Home-Herding in Indian Equity Markets",
     page_icon="🏠",
     layout="wide"
 )
@@ -34,8 +34,8 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.title("📈 Herding Behaviour in Indian equity markets")
-st.caption("🧮 Non-linear CSAD model across market regimes (1996–2024)")
+st.title(" Herding Behaviour in Indian equity markets")
+st.caption(" Non-linear CSAD model across market regimes (1996–2024)")
 
 # load and prep the regime data
 @st.cache_data
@@ -79,7 +79,7 @@ summary_df = summary_df.sort_values("regime_label")
 
 
 # quick stats section
-st.subheader("🔍 Quick Project Snapshot")
+st.subheader("Quick Project Snapshot")
 
 col1, col2, col3, col4 = st.columns(4)
 
@@ -112,7 +112,7 @@ st.markdown("---")
 
 
 # explaining herding behavior
-st.subheader("🐑 What is Herding?")
+st.subheader(" What is Herding?")
 
 left_col, right_col = st.columns([2, 1])
 
@@ -152,7 +152,7 @@ st.markdown("---")
 
 
 # project goals
-st.subheader("🎯 What are we actually trying to show?")
+st.subheader(" What are we actually trying to show?")
 
 st.markdown(
     """
@@ -181,7 +181,7 @@ st.markdown("---")
 
 
 # CSAD explanation
-st.subheader("🧮 What exactly is CSAD?")
+st.subheader(" What exactly is CSAD?")
 
 st.markdown(
     """
@@ -260,7 +260,7 @@ st.markdown("---")
 
 
 # why CSAD specifically
-st.subheader("📐 Why use CSAD instead of other measures?")
+st.subheader(" Why use CSAD instead of other measures?")
 
 c1, c2 = st.columns(2)
 
@@ -269,13 +269,13 @@ with c1:
         """
 **Other options we considered (and why they didn't work):**
 
-- 📉 **Index volatility**  
+-  **Index volatility**  
   Only shows how much the index bounces around. Doesn't tell us anything about whether individual stocks are moving together or independently. High volatility can happen with OR without herding.
 
-- 🔗 **Average correlations**  
+-  **Average correlations**  
   Requires massive correlation matrices and still doesn't directly capture the non-linear convergence we're looking for.
 
-- 📊 **CSSD (cross-sectional standard deviation)**  
+-  **CSSD (cross-sectional standard deviation)**  
   Too sensitive to outliers. One or two crazy stocks can throw off the entire measure.
 
 The problem? These metrics mix up:
@@ -309,7 +309,7 @@ st.markdown("---")
 
 
 # visualization of herding by regime
-st.subheader("📊 Which periods showed stronger herding?")
+st.subheader(" Which periods showed stronger herding?")
 
 st.write(
     "These bars show **herding intensity relative to our 1996-1999 baseline**. "
@@ -363,7 +363,7 @@ st.markdown("---")
 
 
 # detailed table
-st.subheader("📋 Detailed regression results by regime")
+st.subheader(" Detailed regression results by regime")
 
 table_cols = ["regime_label", "n_obs", "mean_CSAD", "gamma2_Rm_sq", "herding_strength", "herding_label"]
 table_df = summary_df[table_cols].copy()
@@ -396,7 +396,7 @@ def style_row(row):
 
 styled = table_df.style.apply(style_row, axis=1)
 
-with st.expander("📊 Full regime summary (click to expand)", expanded=False):
+with st.expander(" Full regime summary (click to expand)", expanded=False):
     st.markdown(
         """
         <div style="

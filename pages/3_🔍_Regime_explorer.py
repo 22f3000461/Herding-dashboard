@@ -4,7 +4,7 @@ import numpy as np
 import plotly.express as px
 
 st.set_page_config(
-    page_title="🔍 Regime explorer – Herding dashboard",
+    page_title=" Regime explorer – Herding dashboard",
     page_icon="🔍",
     layout="wide"
 )
@@ -30,7 +30,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.title("🔍 Regime Explorer")
+st.title(" Regime Explorer")
 st.caption("drill down into one regime: see prices move, returns spike, and CSAD tell its story")
 
 # same file setup as before

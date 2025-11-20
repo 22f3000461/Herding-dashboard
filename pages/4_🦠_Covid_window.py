@@ -4,7 +4,7 @@ import numpy as np
 import plotly.express as px
 
 st.set_page_config(
-    page_title="🦠 Covid window – Herding dashboard",
+    page_title=" Covid window – Herding dashboard",
     page_icon="🦠",
     layout="wide"
 )
@@ -21,7 +21,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.title("🦠 Covid Window: Crash, Rebound, and IPO Mania")
+st.title(" Covid Window: Crash, Rebound, and IPO Mania")
 st.caption("the wildest market period in recent memory – panic, stimulus checks, and meme stocks")
 
 @st.cache_data

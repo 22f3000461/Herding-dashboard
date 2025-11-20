@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 st.set_page_config(
-    page_title="🧩 Conclusion, limitations & references – Herding dashboard",
+    page_title=" Conclusion, limitations & references – Herding dashboard",
     page_icon="🧩",
     layout="wide"
 )
@@ -39,7 +39,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.title("🧩 Conclusion, Suggestions, Limitations and References")
+st.title(" Conclusion, Suggestions, Limitations and References")
 st.caption("wrapping up what we learned from watching markets lose their minds")
 
 @st.cache_data

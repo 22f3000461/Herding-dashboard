@@ -4,7 +4,7 @@ import numpy as np
 import plotly.express as px
 
 st.set_page_config(
-    page_title="📊 Data and Methodology – Herding dashboard",
+    page_title="Data and Methodology – Herding dashboard",
     page_icon="📊", 
     layout="wide"
 )
@@ -29,7 +29,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.title("📊 Data & Methodology")
+st.title(" Data & Methodology")
 st.caption("Breaking down how we analyzed 28 years of Indian market data")
 
 # Load the regime summary data
@@ -115,7 +115,7 @@ st.markdown(
 For every single trading day in our sample, we calculated three main things:
 
 **Individual stock return** - \( R_{i,t} \)  
-Pretty straightforward: (Today's close - Yesterday's close) / Yesterday's close for each stock
+ (Today's close - Yesterday's close) / Yesterday's close for each stock
 
 **Market return** - \( R_{m,t} \)  
 The overall portfolio return, calculated as a value-weighted average across all stocks in the universe that day
@@ -141,7 +141,7 @@ When herding happens, CSAD doesn't grow like it should during big market moves. 
 st.markdown("---")
 
 
-st.subheader("📘 The regression model (non-linear CSAD)")
+st.subheader("The regression model (non-linear CSAD)")
 
 st.markdown(
     """
