@@ -26,11 +26,11 @@ st.caption("watching dispersion dance around inside each market regime")
 
 # yeah I hardcoded the files, sue me
 REGIME_FILES = {
-    "🧊1996–1999  Baseline": "data/csad_1996_1999.csv",
-    "📈1999–2007  Pre-GFC boom": "data/csad_1999_2007.csv",
-    "💥2007–2009  GFC crisis": "data/csad_2007_2009.csv",
-    "📱2015–2024  Modern era": "data/csad_2015_2024.csv",
-    "😷2020–2022  Covid + ipo mania": "data/csad_2020_2022.csv",
+    "1996–1999  Baseline": "data/csad_1996_1999.csv",
+    "1999–2007  Pre-GFC boom": "data/csad_1999_2007.csv",
+    "2007–2009  GFC crisis": "data/csad_2007_2009.csv",
+    "2015–2024  Modern era": "data/csad_2015_2024.csv",
+    "2020–2022  Covid + ipo mania": "data/csad_2020_2022.csv",
 }
 
 @st.cache_data
@@ -146,6 +146,6 @@ div.stButton > button:hover {
 """, unsafe_allow_html=True)
 
 st.markdown("<div class='centered-btn'>", unsafe_allow_html=True)
-if st.button("🔍 Next: Regime Explorer", key="go_regime"):
+if st.button(" Next: Regime Explorer", key="go_regime"):
     st.switch_page("pages/3_🔍_Regime_explorer.py")
 st.markdown("</div>", unsafe_allow_html=True)

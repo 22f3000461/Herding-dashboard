@@ -53,13 +53,13 @@ def load_regime_summary(path: str):
     for _, row in df.iterrows():
         g2 = row["gamma2_Rm_sq"]
         if row["is_baseline"]:
-            labels.append("🧊 baseline (no herding)")
+            labels.append(" baseline (no herding)")
         elif g2 <= -0.06:
-            labels.append("🐃 strong herding")
+            labels.append(" strong herding")
         elif g2 < 0:
-            labels.append("🐑 mild herding")
+            labels.append(" mild herding")
         else:
-            labels.append("🧊 no herding")
+            labels.append(" no herding")
     df["herding_label"] = labels
     
     df.loc[df["is_baseline"], "herding_strength"] = 0.0
@@ -114,13 +114,13 @@ st.markdown(
     """
 For every single trading day in our sample, we calculated three main things:
 
-**Individual stock return** - \( R_{i,t} \)  
+**Individual stock return** - \( R_{i,t} \)\  
  (Today's close - Yesterday's close) / Yesterday's close for each stock
 
-**Market return** - \( R_{m,t} \)  
+**Market return** - \( R_{m,t} \)\  
 The overall portfolio return, calculated as a value-weighted average across all stocks in the universe that day
 
-**CSAD (Cross-Sectional Absolute Deviation)** - \( \text{CSAD}_t \)  
+**CSAD (Cross-Sectional Absolute Deviation)** - \( \text{CSAD}_t \)\  
 This is the key metric. It measures dispersion - basically "how spread out were individual stock returns compared to the market?"
 """
 )
@@ -210,10 +210,10 @@ fig = px.bar(
     },
     title="Sample size and herding classification by regime",
     color_discrete_map={
-        "🧊 baseline (no herding)": "#60a5fa",
-        "🐑 mild herding": "#f97373",
-        "🐃 strong herding": "#b91c1c",
-        "🧊 no herding": "#6b7280",
+        " baseline (no herding)": "#60a5fa",
+        " mild herding": "#f97373",
+        "strong herding": "#b91c1c",
+        " no herding": "#6b7280",
     }
 )
 
@@ -260,6 +260,6 @@ div.stButton > button:hover {
 """, unsafe_allow_html=True)
 
 st.markdown("<div class='centered-btn'>", unsafe_allow_html=True)
-if st.button("📉 Next: Rolling CSAD Analysis", key="go_roll"):
+if st.button(" Next: Rolling CSAD Analysis", key="go_roll"):
     st.switch_page("pages/2_📉_Rolling_CSAD.py")
 st.markdown("</div>", unsafe_allow_html=True)

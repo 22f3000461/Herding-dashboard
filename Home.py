@@ -59,13 +59,13 @@ def load_regime_summary(path: str):
     for _, row in df.iterrows():
         g2 = row["gamma2_Rm_sq"]
         if row["is_baseline"]:
-            labels.append("🧊 Baseline (no herding)")
+            labels.append(" Baseline (no herding)")
         elif g2 <= -0.06:
-            labels.append("🐃 Strong herding")
+            labels.append(" Strong herding")
         elif g2 < 0:
-            labels.append("🐑 Mild herding")
+            labels.append(" Mild herding")
         else:
-            labels.append("🧊 no herding")
+            labels.append(" no herding")
     df["herding_label"] = labels
 
     df.loc[df["is_baseline"], "herding_strength"] = 0.0
@@ -123,9 +123,9 @@ Herding is basically when investors stop thinking independently and start copyin
 
 Think of it like this:
 
-- 🐑 **Copy-paste trading** – "If the big players are buying X, I should too"
-- 😨 **FOMO kicks in** – "Everyone's jumping into small-caps, can't miss out"
-- 🙈 **Ignoring your own analysis** – Deep down you know it's time to sell, but you buy anyway because "the market knows best"
+-  **Copy-paste trading** – "If the big players are buying X, I should too"
+-  **FOMO kicks in** – "Everyone's jumping into small-caps, can't miss out"
+-  **Ignoring your own analysis** – Deep down you know it's time to sell, but you buy anyway because "the market knows best"
 
 Normally after news breaks:
 - Some traders feel bullish
@@ -166,11 +166,11 @@ This dashboard answers three big questions:
 How we approached it:
 
 - Split 28 years into distinct **market regimes**:
-  - 🧊 **1996–1999** – Our baseline (thinner market, less retail participation)
-  - 📈 **1999–2007** – Boom years leading up to the global crisis
-  - 💥 **2007–2009** – The financial crisis period
-  - 📱 **2015–2024** – Modern era with digital trading & retail boom
-  - 😷 **2020–2022** – COVID crash followed by IPO frenzy
+  -  **1996–1999** – Our baseline (thinner market, less retail participation)
+  -  **1999–2007** – Boom years leading up to the global crisis
+  -  **2007–2009** – The financial crisis period
+  -  **2015–2024** – Modern era with digital trading & retail boom
+  -  **2020–2022** – COVID crash followed by IPO frenzy
   
 - Calculated **daily CSAD** for each regime
 - Ran the **non-linear CSAD regression** and compared γ₂ values across periods
@@ -352,10 +352,10 @@ st.plotly_chart(fig, use_container_width=True)
 st.markdown(
     """
 Legend breakdown:
-- 🧊 **Baseline** → Reference period (1996-1999), no herding detected
-- 🐃 **Strong herding** → Crisis/mania periods like GFC and COVID
-- 🐑 **Mild herding** → Some convergence but stocks still maintain individuality
-- 🧊 **No herding** → Market behaving rationally with independent decision-making
+-  **Baseline** → Reference period (1996-1999), no herding detected
+-  **Strong herding** → Crisis/mania periods like GFC and COVID
+-  **Mild herding** → Some convergence but stocks still maintain individuality
+-  **No herding** → Market behaving rationally with independent decision-making
 """
 )
 
@@ -447,6 +447,6 @@ div.stButton > button:hover {
 """, unsafe_allow_html=True)
 
 st.markdown("<div class='centered-btn'>", unsafe_allow_html=True)
-if st.button("📊 Next: Data & Methodology", key="go_data"):
+if st.button("Next: Data & Methodology", key="go_data"):
     st.switch_page("pages/1_📊_Data_and_methodology.py")
 st.markdown("</div>", unsafe_allow_html=True)

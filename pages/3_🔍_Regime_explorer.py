@@ -35,11 +35,11 @@ st.caption("drill down into one regime: see prices move, returns spike, and CSAD
 
 # same file setup as before
 REGIME_CSAD = {
-    "🧊1996–1999  Baseline": "data/csad_1996_1999.csv",
-    "📈1999–2007  Pre-GFC boom": "data/csad_1999_2007.csv",
-    "💥2007–2009  GFC crisis": "data/csad_2007_2009.csv",
-    "📱2015–2024  Modern era": "data/csad_2015_2024.csv",
-    "😷2020–2022  Covid + IPO mania": "data/csad_2020_2022.csv",
+    "1996–1999  Baseline": "data/csad_1996_1999.csv",
+    "1999–2007  Pre-GFC boom": "data/csad_1999_2007.csv",
+    "2007–2009  GFC crisis": "data/csad_2007_2009.csv",
+    "2015–2024  Modern era": "data/csad_2015_2024.csv",
+    "2020–2022  Covid + IPO mania": "data/csad_2020_2022.csv",
 }
 
 @st.cache_data
@@ -189,6 +189,6 @@ div.stButton > button:hover {
 """, unsafe_allow_html=True)
 
 st.markdown("<div class='centered-btn'>", unsafe_allow_html=True)
-if st.button("🦠 Next: Covid Window", key="go_covid"):
+if st.button(" Next: Covid Window", key="go_covid"):
     st.switch_page("pages/4_🦠_Covid_window.py")
 st.markdown("</div>", unsafe_allow_html=True)

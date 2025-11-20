@@ -146,6 +146,6 @@ div.stButton > button:hover {
 """, unsafe_allow_html=True)
 
 st.markdown("<div class='centered-btn'>", unsafe_allow_html=True)
-if st.button("🧩 Next: Conclusion", key="go_conclusion"):
+if st.button(" Next: Conclusion", key="go_conclusion"):
     st.switch_page("pages/5_🧩_Conclusion_limitation_reference.py")
 st.markdown("</div>", unsafe_allow_html=True)
